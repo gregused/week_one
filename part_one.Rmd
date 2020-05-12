@@ -1,0 +1,41 @@
+---
+title: "week1 lab part I"
+author: "Gregory Utkin"
+date: "5/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r}
+library(tidyverse)
+
+x <- sort(rnorm(200, mean = 10, sd = 10))
+y <- sort(rnorm(200, mean = 10, sd = 10))
+
+plot(x,y)
+
+```
+
+
+*Function*
+``` {r}
+
+# function for Q-Q plot, input => numeric vector x.
+make_qqplot <- function(x) {
+  nx <- sort(x)
+  y <- sort(rnorm(length(nx), mean(nx), sd(nx)))
+  
+  plot(nx,y)
+}
+
+# testing function
+rv <- rnorm(500, 45, 100)
+make_qqplot(rv)
+
+```
+
+
+
