@@ -1,0 +1,131 @@
+---
+title: "part II"
+date: "5/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r}
+library(tidyverse)
+library(zoo)
+library(infer)
+options(scipen = "999")
+
+df <- read_csv("Oscars-demographics-DFE.csv")
+str(df)
+
+```
+
+```{r}
+# one way to answer - Which movie(s) won the most unique "Big 5" awards?
+head(sort(table(df$movie), decreasing = TRUE))
+
+```
+```{r}
+# second dplyr way to answer - Which movie(s) won the most unique "Big 5" awards?
+df %>%
+  select(award, movie) %>%
+  group_by(movie) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+
+```
+```{r}
+
+# Of all actresses who have won the Best Actress award, what are is the most common first name?
+
+df %>%
+  select(award, person) %>%
+  filter(award == "Best Actress") %>%
+  separate(person, c("first", "last")) %>%
+  group_by(first) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+```
+```{r}
+
+#What US State, or non-US country, has produced the most Oscar winners (for the awards in this dataset)?
+
+df %>%
+  select(birthplace, award) %>%
+  separate(birthplace, c("city", "country_state"), sep = ",") %>%
+  group_by(country_state) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+
+```
+```{r}
+# creating dummy vars for gender
+df$men <- ifelse(df$award == "Best Supporting Actor" | df$award == "Best Actor", 1,0)
+
+df$women <- ifelse(df$award == "Best Supporting Actress" | df$award == "Best Actress", 1, 0)
+
+
+
+
+df2 <- df %>%
+  separate(date_of_birth, into = c("day", "month", "birth_year"), sep = "-")
+
+
+# this creates year 2000 instead of 1900:  im lost .....
+df$new_date <- lubridate::parse_date_time(df$date_of_birth,
+                           orders = "d m y"
+                           )
+
+df %>%
+  mutate(date_b = as.character(date_of_birth),
+         new_date = as.character(new_date)) %>%
+  str_replace(new_date, "20", "19") %>%
+  select(date_of_birth, new_date, date_b)
+
+  
+
+# need a linear model (age ~ time + women + men)
+
+reg <- lm()
+  
+```
+
+
+
+```{r}
+# confidence intervals
+
+df$not_white <- ifelse(df$race_ethnicity != "White", 1, 0)
+
+bt <- df %>%
+  select(race_ethnicity, award, not_white) %>%
+  specify(response = not_white) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+
+pct <- bt %>% get_confidence_interval(level = 0.95, type = "percentile")
+
+ggplot(bt, aes(stat)) +
+  geom_histogram(bins = 24) +
+  shade_confidence_interval(endpoints = pct) +
+  ggtitle("Bootstrapped mean (non white oscar winners proportion)")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
