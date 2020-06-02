@@ -14,8 +14,10 @@ library(zoo)
 library(infer)
 options(scipen = "999")
 
-df <- read_csv("Oscars-demographics-DFE.csv")
-str(df)
+df <- read_csv("Oscars-demographics-DFE.csv") %>%
+  mutate_if(is.character, factor)
+
+skimr::skim(df)
 
 ```
 
@@ -24,47 +26,52 @@ str(df)
 head(sort(table(df$movie), decreasing = TRUE))
 
 ```
+
+
+
 ```{r}
 # second dplyr way to answer - Which movie(s) won the most unique "Big 5" awards?
 df %>%
-  select(award, movie) %>%
-  group_by(movie) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
-
-```
-```{r}
-
-# Of all actresses who have won the Best Actress award, what are is the most common first name?
+    count(df,movie, person,sort = TRUE)
 
 df %>%
-  select(award, person) %>%
-  filter(award == "Best Actress") %>%
-  separate(person, c("first", "last")) %>%
-  group_by(first) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
+  filter(person == "Hilary Swank") %>%
+  count(movie, person, sort = TRUE)
 ```
+
+
+
 ```{r}
+# Of all actresses who have won the Best Actress award, what are is the most common first name?
+df %>%
+  filter(award == "Best Actress") %>%
+  separate(person,
+           c("first", "last")) %>%
+  count(movie,first, sort = TRUE)
+```
 
+
+
+
+#NA value is New York City
+```{r}
 #What US State, or non-US country, has produced the most Oscar winners (for the awards in this dataset)?
-
 df %>%
   select(birthplace, award) %>%
   separate(birthplace, c("city", "country_state"), sep = ",") %>%
-  group_by(country_state) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
-
+  count(country_state, sort = TRUE) %>%
+  ggplot(aes(n, country_state)) +
+  geom_col()
 ```
+
+
+
+
 ```{r}
 # creating dummy vars for gender
 df$men <- ifelse(df$award == "Best Supporting Actor" | df$award == "Best Actor", 1,0)
 
 df$women <- ifelse(df$award == "Best Supporting Actress" | df$award == "Best Actress", 1, 0)
-
-
-
 
 df2 <- df %>%
   separate(date_of_birth, into = c("day", "month", "birth_year"), sep = "-")
@@ -78,15 +85,7 @@ df$new_date <- lubridate::parse_date_time(df$date_of_birth,
 df %>%
   mutate(date_b = as.character(date_of_birth),
          new_date = as.character(new_date)) %>%
-  str_replace(new_date, "20", "19") %>%
   select(date_of_birth, new_date, date_b)
-
-  
-
-# need a linear model (age ~ time + women + men)
-
-reg <- lm()
-  
 ```
 
 
@@ -105,27 +104,8 @@ bt <- df %>%
 pct <- bt %>% get_confidence_interval(level = 0.95, type = "percentile")
 
 ggplot(bt, aes(stat)) +
-  geom_histogram(bins = 24) +
+  geom_bar(position = "dodge" ) +
   shade_confidence_interval(endpoints = pct) +
-  ggtitle("Bootstrapped mean (non white oscar winners proportion)")
+  ggtitle("Average of non white oscar winners") +
+  scale_x_continuous(labels = scales::percent_format())
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
