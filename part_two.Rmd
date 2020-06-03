@@ -32,11 +32,28 @@ head(sort(table(df$movie), decreasing = TRUE))
 ```{r}
 # second dplyr way to answer - Which movie(s) won the most unique "Big 5" awards?
 df %>%
-    count(df,movie, person,sort = TRUE)
+    count(movie, person,sort = TRUE)
 
 df %>%
   filter(person == "Hilary Swank") %>%
   count(movie, person, sort = TRUE)
+
+
+df %>%
+  separate(birthplace, c("city", "country_state"), sep = ",") %>%
+  count(country_state, sort = TRUE) %>%
+  ggplot(aes(n, country_state,)) +
+  geom_col()
+
+df %>%
+  separate(birthplace, c("country", "state_count"), sep = ",") %>%
+  count(state_count, sort = TRUE) %>%
+  mutate(state_count = fct_reorder(state_count, n)) %>%
+  filter(n > 10) %>%
+  ggplot(aes(n, state_count,)) +
+  geom_col()
+
+
 ```
 
 
@@ -47,7 +64,10 @@ df %>%
   filter(award == "Best Actress") %>%
   separate(person,
            c("first", "last")) %>%
-  count(movie,first, sort = TRUE)
+  count(movie,first, sort = TRUE) %>%
+  mutate(first = fct_reorder(first,n)) %>%
+  ggplot(aes(n, first)) +
+  geom_col()
 ```
 
 
@@ -59,7 +79,8 @@ df %>%
 df %>%
   select(birthplace, award) %>%
   separate(birthplace, c("city", "country_state"), sep = ",") %>%
-  count(country_state, sort = TRUE) %>%
+  count(country_state, sort = TRUE, na.rm = T) %>%
+  mutate(country_state = fct_reorder(country_state, n)) %>%
   ggplot(aes(n, country_state)) +
   geom_col()
 ```
