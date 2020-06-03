@@ -1,0 +1,44 @@
+---
+title: "Untitled"
+author: "Gregory Utkin"
+date: "5/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+dat <- read_csv("heroes_information.csv")
+
+dat <- janitor::clean_names(dat)
+
+glimpse(dat)
+
+```
+
+
+```{r}
+# males are more bad than females
+df <- dat %>%
+  select(gender, alignment) %>%
+  filter(alignment == "bad" | alignment == "good", gender == "Female" | gender == "Male") %>%
+  mutate_if(is.character, factor)
+
+tbl <- table(df$gender, df$alignment)
+
+chisq.test(tbl)
+```
+
+```{r}
+
+ggplot(df, aes(gender, fill = alignment)) +
+  geom_bar(position = "dodge") +
+  scale_fill_viridis_d() +
+  ylab("Count") +
+  ggtitle("good bad")
+
+```
+
+
