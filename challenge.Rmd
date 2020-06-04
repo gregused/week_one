@@ -38,7 +38,7 @@ ggplot(df, aes(gender, fill = alignment)) +
   geom_bar(position = "dodge") +
   scale_fill_viridis_d() +
   ylab("Count") +
-  ggtitle("good bad") +
+  ggtitle("Gender Comparison of good/bad characters") +
   theme_minimal()
 ```
 
