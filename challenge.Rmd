@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(RColorBrewer)
 dat <- read_csv("heroes_information.csv")
 
 dat <- janitor::clean_names(dat)
@@ -37,8 +38,8 @@ ggplot(df, aes(gender, fill = alignment)) +
   geom_bar(position = "dodge") +
   scale_fill_viridis_d() +
   ylab("Count") +
-  ggtitle("good bad")
-
+  ggtitle("good bad") +
+  theme_minimal()
 ```
 
 
