@@ -1,6 +1,6 @@
 ---
 title: "part II"
-date: "5/11/2020"
+date: "6/5/2020"
 output: html_document
 ---
 
@@ -14,57 +14,30 @@ library(zoo)
 library(infer)
 options(scipen = "999")
 
-df <- read_csv("Oscars-demographics-DFE.csv") %>%
-  mutate_if(is.character, factor)
+df <- read_csv("Oscars-demographics-DFE.csv")
 
 skimr::skim(df)
 
 ```
 
+ Which movie(s) won the most unique "Big 5" awards?
 ```{r}
-# one way to answer - Which movie(s) won the most unique "Big 5" awards?
-head(sort(table(df$movie), decreasing = TRUE))
-
+df %>%
+    select(movie, award) %>%
+    unique() %>%
+    count(movie,sort = TRUE)
 ```
 
 
-
-```{r}
-# second dplyr way to answer - Which movie(s) won the most unique "Big 5" awards?
-df %>%
-    count(movie, person,sort = TRUE)
-
-df %>%
-  filter(person == "Hilary Swank") %>%
-  count(movie, person, sort = TRUE)
-
-
-df %>%
-  separate(birthplace, c("city", "country_state"), sep = ",") %>%
-  count(country_state, sort = TRUE) %>%
-  ggplot(aes(n, country_state,)) +
-  geom_col()
-
-df %>%
-  separate(birthplace, c("country", "state_count"), sep = ",") %>%
-  count(state_count, sort = TRUE) %>%
-  mutate(state_count = fct_reorder(state_count, n)) %>%
-  filter(n > 10) %>%
-  ggplot(aes(n, state_count,)) +
-  geom_col()
-
-
-```
-
-
-
-```{r}
 # Of all actresses who have won the Best Actress award, what are is the most common first name?
+```{r}
 df %>%
+  select(person, award) %>%
   filter(award == "Best Actress") %>%
+  unique() %>%
   separate(person,
            c("first", "last")) %>%
-  count(movie,first, sort = TRUE) %>%
+  count(first, sort = TRUE) %>%
   mutate(first = fct_reorder(first,n)) %>%
   ggplot(aes(n, first)) +
   geom_col()
@@ -72,45 +45,56 @@ df %>%
 
 
 
-
-#NA value is New York City
-```{r}
 #What US State, or non-US country, has produced the most Oscar winners (for the awards in this dataset)?
+```{r}
+#NA value is New York City
 df %>%
-  select(birthplace, award) %>%
-  separate(birthplace, c("city", "country_state"), sep = ",") %>%
-  count(country_state, sort = TRUE, na.rm = T) %>%
+  select(birthplace, award, person) %>%
+  unique() %>%
+  separate(birthplace, c("city", "country_state"), sep = ",", extra = "drop", fill = "left") %>%
+  replace(is.na(.), "NY") %>%
+  count(country_state, sort = TRUE) %>%
   mutate(country_state = fct_reorder(country_state, n)) %>%
+  filter(n > 10) %>%
   ggplot(aes(n, country_state)) +
   geom_col()
 ```
 
 
 
-
+**thank you, Natalie O'Shea**
 ```{r}
 # creating dummy vars for gender
 df$men <- ifelse(df$award == "Best Supporting Actor" | df$award == "Best Actor", 1,0)
 
-df$women <- ifelse(df$award == "Best Supporting Actress" | df$award == "Best Actress", 1, 0)
+df$women <- ifelse(df$award == "Best Supporting Actress" | df$award == "Best Actress", "female", "male")
 
-df2 <- df %>%
-  separate(date_of_birth, into = c("day", "month", "birth_year"), sep = "-")
+df_mod <- df %>%
+  filter(award %in% c("Best Supporting Actor", "Best Actor", "Best Supporting Actress", "Best Actress")) %>%
+  unique() %>%
+  separate(date_of_birth, c("day", "month", "year"), sep = "-") %>%
+  # add leading values to day and year if needed
+  mutate(day = ifelse(nchar(day) < 2, paste0("0", day), day),
+         year = ifelse(nchar(year) < 4, paste0("19", year), year)) %>% 
+  # reunite into original column
+  unite("date_of_birth", day:year, sep = "-") %>%
+  # convert to dates and calculate age
+  mutate(
+    date_of_birth = dmy(date_of_birth),
+    year_of_award = dmy(paste0("01-Feb-", year_of_award)),
+    age = interval(date_of_birth, year_of_award) %/% years(1),
+    women = as.factor(women)
+  ) %>%
+  select(women, age, year_of_award)
 
+#linear model 
 
-# this creates year 2000 instead of 1900:  im lost .....
-df$new_date <- lubridate::parse_date_time(df$date_of_birth,
-                           orders = "d m y"
-                           )
-
-df %>%
-  mutate(date_b = as.character(date_of_birth),
-         new_date = as.character(new_date)) %>%
-  select(date_of_birth, new_date, date_b)
+lm_mod <- lm(age ~ year(year_of_award) + women, data = df_mod)
+summary(lm_mod)
 ```
+**women are younger than men by an average of 10 years (p.val = 0.00)** 
 
-
-
+##creating bootstrapped mean of propotion non white Oscar winners## 
 ```{r}
 # confidence intervals
 
