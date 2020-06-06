@@ -29,7 +29,7 @@ df %>%
 ```
 
 
-# Of all actresses who have won the Best Actress award, what are is the most common first name?
+Of all actresses who have won the Best Actress award, what are is the most common first name?
 ```{r}
 df %>%
   select(person, award) %>%
@@ -45,7 +45,7 @@ df %>%
 
 
 
-#What US State, or non-US country, has produced the most Oscar winners (for the awards in this dataset)?
+What US State, or non-US country, has produced the most Oscar winners (for the awards in this dataset)?
 ```{r}
 #NA value is New York City
 df %>%
@@ -94,7 +94,7 @@ summary(lm_mod)
 ```
 **women are younger than men by an average of 10 years (p.val = 0.00)** 
 
-##creating bootstrapped mean of propotion non white Oscar winners## 
+creating bootstrapped mean of propotion non white Oscar winners
 ```{r}
 # confidence intervals
 
@@ -111,6 +111,6 @@ pct <- bt %>% get_confidence_interval(level = 0.95, type = "percentile")
 ggplot(bt, aes(stat)) +
   geom_bar(position = "dodge" ) +
   shade_confidence_interval(endpoints = pct) +
-  ggtitle("Average of non white oscar winners") +
+  ggtitle("Proportion of non white Oscar winners") +
   scale_x_continuous(labels = scales::percent_format())
 ```
