@@ -62,7 +62,6 @@ df %>%
 
 
 
-**thank you, Natalie O'Shea**
 ```{r}
 # creating dummy vars for gender
 df$men <- ifelse(df$award == "Best Supporting Actor" | df$award == "Best Actor", 1,0)
