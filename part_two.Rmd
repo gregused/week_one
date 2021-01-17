@@ -12,11 +12,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(zoo)
 library(infer)
+library(lubridate)
 options(scipen = "999")
 
 df <- read_csv("Oscars-demographics-DFE.csv")
 
 skimr::skim(df)
+
+colSums(is.na(df))
 
 ```
 
@@ -25,8 +28,8 @@ skimr::skim(df)
 df %>%
     select(movie, award) %>%
     unique() %>%
-    count(movie,sort = TRUE)
-```
+    count(movie, sort = TRUE)
+``` 
 
 
 Of all actresses who have won the Best Actress award, what are is the most common first name?
@@ -35,10 +38,10 @@ df %>%
   select(person, award) %>%
   filter(award == "Best Actress") %>%
   unique() %>%
-  separate(person,
-           c("first", "last")) %>%
+  separate(person, c("first", "last")) %>%
   count(first, sort = TRUE) %>%
-  mutate(first = fct_reorder(first,n)) %>%
+  mutate(first = fct_reorder(first, n)) %>%
+  filter(n > 1) %>%
   ggplot(aes(n, first)) +
   geom_col()
 ```
@@ -52,7 +55,8 @@ df %>%
   select(birthplace, award, person) %>%
   unique() %>%
   separate(birthplace, c("city", "country_state"), sep = ",", extra = "drop", fill = "left") %>%
-  replace(is.na(.), "NY") %>%
+  replace(is.na(.), "Ny") %>%
+  mutate(country_state = ifelse(country_state == "New York City", " Ny", country_state)) %>%
   count(country_state, sort = TRUE) %>%
   mutate(country_state = fct_reorder(country_state, n)) %>%
   filter(n > 10) %>%
