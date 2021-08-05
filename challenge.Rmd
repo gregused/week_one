@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(RColorBrewer)
+library(tidyverse)
 dat <- read_csv("heroes_information.csv")
 
 dat <- janitor::clean_names(dat)
